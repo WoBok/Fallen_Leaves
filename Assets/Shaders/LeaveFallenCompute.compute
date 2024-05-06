@@ -1,0 +1,56 @@
+#pragma kernel Fallen
+
+struct FallenLeavesData {
+    float3 position;
+    float3 windForce;
+    float fallingSpeed;
+    float2 rotationSpeed;
+    float scale;
+};
+
+RWStructuredBuffer<FallenLeavesData> fallenLeavesDataBuffer;
+StructuredBuffer<float4x4> objectToWorldMatrixBuffer;
+
+float time;
+
+void GetRotationMatrix(float2 rotationSpeed) {
+    float xAngle = _Time.y * rotationSpeed.x * frac(time);
+    float xSin = sin(xAngle);
+    float xCos = cos(xAngle);
+    float yAngle = _Time.y * rotationSpeed.y * frac(time) * frac(time);
+    float ySin = sin(yAngle);
+    float yCos = cos(yAngle);
+
+    float4x4 xRotationMatrix = float4x4(
+        1, 0, 0, 0,
+        0, xCos, -xSin, 0,
+        0, xSin, xCos, 0,
+        0, 0, 0, 1
+    );
+
+    float4x4 yRotationMatrix = float4x4(
+        yCos, 0, ySin, 0,
+        0, 1, 0, 0,
+        - ySin, 0, yCos, 0,
+        0, 0, 0, 1
+    );
+
+    return mul(xRotationMatrix, yRotationMatrix);
+}
+
+[numthreads(128, 1, 1)]
+void Fallen(uint3 id : SV_DispatchThreadID) {
+    FallenLeavesData data = fallenLeavesDataBuffer[id.x];
+    float4x4 objectToWorldMatrix = 0;
+
+    float3 position = data.position + float3(0, -1, 0) * data.fallingSpeed * time + data.windForce;
+
+    objectToWorldMatrix._11_21_31_41 = float4(data.scale, 0, 0, 0);
+    objectToWorldMatrix._12_22_32_42 = float4(0, data.scale, 0, 0);
+    objectToWorldMatrix._13_23_33_43 = float4(0, 0, data.scale, 0);
+    objectToWorldMatrix._14_24_34_44 = float4(position, 1);
+
+    float4x4 rotationMatrix = GetRotationMatrix(rotationSpeed);
+
+    objectToWorldMatrix = mul(objectToWorldMatrix, rotationMatrix);
+}
