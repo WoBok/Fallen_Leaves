@@ -76,6 +76,8 @@ Shader "UPR Performant Effect/Simple Light GPU Instancing" {
             #pragma shader_feature NORMALSWITCH_ON
             #pragma shader_feature FOGSWITCH_ON
 
+            #pragma instancing_options procedural:SetupMatrix
+
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes {
@@ -97,7 +99,7 @@ Shader "UPR Performant Effect/Simple Light GPU Instancing" {
                 float fogFactor : TEXCOORD6;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
-            
+
             sampler2D _BaseMap;
             sampler2D _NormalMap;
 
@@ -139,6 +141,19 @@ Shader "UPR Performant Effect/Simple Light GPU Instancing" {
                 half _AlphaClipThreshold;
             #endif
 
+            #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
+                StructuredBuffer<float4x4> objectToWorldMatrixBuffer;
+                float4x4 _InstanceObjectToWorld;
+                float4x4 _InstanceWorldToObject;
+            #endif
+
+            void SetupMatrix() {
+                #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
+                    _InstanceObjectToWorld = objectToWorldMatrixBuffer[unity_InstanceID];
+                    _InstanceWorldToObject = Inverse(_InstanceObjectToWorld);
+                #endif
+            }
+
             Varyings Vertex(Attributes input) {
 
                 Varyings output = (Varyings)0;
@@ -146,13 +161,25 @@ Shader "UPR Performant Effect/Simple Light GPU Instancing" {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float4x4 objectToWorld = 0;
+                float4x4 worldToObject = 0;
+
+                #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
+                    objectToWorld = _InstanceObjectToWorld;
+                    worldToObject = _InstanceWorldToObject;
+                #else
+                    objectToWorld = unity_ObjectToWorld;
+                    worldToObject = unity_WorldToObject;
+                #endif
+
+                float4 positionWS = mul(objectToWorld, input.positionOS);
+                output.positionCS = TransformWorldToHClip(positionWS.xyz);
                 
                 #if defined(DIFFUSESWITCH_ON) || defined(SPECULARSWITCH_ON) || defined(FRESNELSWITCH_ON) || defined(NORMALSWITCH_ON)
-                    output.normalWS = mul(input.normalOS, (float3x3)unity_WorldToObject);
+                    output.normalWS = mul(input.normalOS, (float3x3)worldToObject);
 
                     #if defined(SPECULARSWITCH_ON) || defined(FRESNELSWITCH_ON) || defined(NORMALSWITCH_ON)
-                        output.positionWS = mul(unity_ObjectToWorld, input.positionOS).xyz;
+                        output.positionWS = mul(objectToWorld, input.positionOS).xyz;
                     #endif
 
                     #if defined(NORMALSWITCH_ON)

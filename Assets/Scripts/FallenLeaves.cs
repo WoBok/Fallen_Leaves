@@ -18,6 +18,7 @@ public class FallenLeaves : MonoBehaviour
 
     [Header("Paramas")]
     public int count = 500;
+    public float hight = 2;
     public Vector2 xRange = new Vector2(-5, 5);
     public Vector2 zRange = new Vector2(-5, 5);
     public Vector2 scaleRange = new Vector2(1, 2);
@@ -27,8 +28,10 @@ public class FallenLeaves : MonoBehaviour
     public Vector2 yRotSpeedRange = new Vector2(1, 2);
     public Vector3 windForce = new Vector3(1, 0, 1);
     public Vector2 windForceOffset = new Vector2(0, 0.3f);
+    public float distanceInterval;
 
     ComputeBuffer m_LeavesBuffer;
+    ComputeBuffer m_MatrixBuffer;
 
     float m_LifeSpan;
 
@@ -43,18 +46,24 @@ public class FallenLeaves : MonoBehaviour
     {
         m_LifeSpan = Random.Range(lifeRange.x, lifeRange.y);
         m_KernelIndex = shader.FindKernel("Fallen");
+        shader.SetFloat("distanceInterval", distanceInterval);
     }
     void Update()
     {
         DispatchKernel();
+
+        Graphics.DrawMeshInstancedProcedural(mesh, 0, material, new Bounds(Vector3.zero, 10000 * Vector3.one), count);
     }
     void OnValidate()
     {
         UpdateBuffer();
     }
-    void OnDisable()
+    void OnDestroy()
     {
-        m_LeavesBuffer.Release();
+        if (m_LeavesBuffer != null)
+            m_LeavesBuffer.Release();
+        if (m_MatrixBuffer != null)
+            m_MatrixBuffer.Release();
     }
     void UpdateBuffer()
     {
@@ -66,7 +75,7 @@ public class FallenLeaves : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var posX = Random.Range(xRange.x, xRange.y);
-            var posY = transform.position.y;
+            var posY = hight;
             var posZ = Random.Range(zRange.x, zRange.y);
             fallenLeavesData[i].position = new Vector3(posX, posY, posZ);
 
@@ -80,6 +89,16 @@ public class FallenLeaves : MonoBehaviour
 
             fallenLeavesData[i].scale = Random.Range(scaleRange.x, scaleRange.y);
         }
+
+        m_LeavesBuffer.SetData(fallenLeavesData);
+        shader.SetBuffer(m_KernelIndex, "fallenLeavesDataBuffer", m_LeavesBuffer);
+
+        if (m_MatrixBuffer != null)
+            m_MatrixBuffer.Release();
+        m_MatrixBuffer = new ComputeBuffer(count, sizeof(float) * 4 * 4);
+        shader.SetBuffer(m_KernelIndex, "objectToWorldMatrixBuffer", m_MatrixBuffer);
+
+        material.SetBuffer("objectToWorldMatrixBuffer", m_MatrixBuffer);
     }
     void DispatchKernel()
     {
