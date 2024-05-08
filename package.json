@@ -1,0 +1,16 @@
+{
+  "name": "com.wobok.fallenleaves",
+  "version": "1.0.0",
+  "displayName": "Fallen Leaves",
+  "description": "Fallen leaves made using GPU Instancing and Compute Shader.",
+  "unity": "2022.3",
+ "keywords": [
+    "WoBok",
+    "Fallen Leaves"
+  ],
+  "author": {
+    "name": "WoBok",
+    "email": "Darwin.Vinci.WKC@gmail.com",
+    "url": "https://github.com/WoBok"
+  }
+}

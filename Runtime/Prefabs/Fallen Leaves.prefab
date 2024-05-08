@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9183445438031683244
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6865570503884809019}
+  - component: {fileID: 1612164607014816114}
+  m_Layer: 0
+  m_Name: Fallen Leaves
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6865570503884809019
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9183445438031683244}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1612164607014816114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9183445438031683244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72ee7fbd27fd2e84a8917cc30c0ac587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mesh: {fileID: 2783131832183395012, guid: 229b5cf34b8f537489a63e33b2a16abb, type: 3}
+  material: {fileID: 2100000, guid: 01dcc5289dbfee74c9d2b39ba109343b, type: 2}
+  computeShader: {fileID: 7200000, guid: c7b9892a2b93c664e85bb639b2bdb29e, type: 3}
+  count: 1000
+  altitude: 10
+  descendingDistance: 15
+  xRange: {x: -20, y: 20}
+  zRange: {x: -20, y: 20}
+  scaleRange: {x: 0.1, y: 0.3}
+  fallingSpeedRange: {x: 1, y: 2}
+  xRotSpeedRange: {x: 1, y: 2}
+  yRotSpeedRange: {x: 1, y: 2}
+  windForce: {x: 1, y: 0, z: 1}
+  windForceOffset: {x: 0, y: 2}
+  warmUp: 1

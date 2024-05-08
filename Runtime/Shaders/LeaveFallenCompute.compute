@@ -1,0 +1,68 @@
+#pragma kernel Fallen
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+struct FallenLeavesData {
+    float3 position;
+    float3 windForce;
+    float2 rotationSpeed;
+    float fallingSpeed;
+    float scale;
+    float altitude;
+    float descendingDistance;
+};
+
+StructuredBuffer<FallenLeavesData> fallenLeavesDataBuffer;
+RWStructuredBuffer<float4x4> objectToWorldMatrixBuffer;
+
+float4x4 GetRotationMatrix(float2 rotationSpeed) {
+    float xAngle = _Time.y * rotationSpeed.x ;
+    float xSin = sin(xAngle);
+    float xCos = cos(xAngle);
+    float yAngle = _Time.y * rotationSpeed.y ;
+    float ySin = sin(yAngle);
+    float yCos = cos(yAngle);
+
+    float4x4 xRotationMatrix = float4x4(
+        1, 0, 0, 0,
+        0, xCos, -xSin, 0,
+        0, xSin, xCos, 0,
+        0, 0, 0, 1
+    );
+
+    float4x4 yRotationMatrix = float4x4(
+        yCos, 0, ySin, 0,
+        0, 1, 0, 0,
+        - ySin, 0, yCos, 0,
+        0, 0, 0, 1
+    );
+
+    return mul(xRotationMatrix, yRotationMatrix);
+}
+
+[numthreads(128, 1, 1)]
+void Fallen(uint3 id : SV_DispatchThreadID) {
+    FallenLeavesData data = fallenLeavesDataBuffer[id.x];
+
+    float3 position = data.position + float3(0, -1, 0) * data.fallingSpeed * _Time.y;
+
+    position.y = position.y % data.descendingDistance;
+
+    float windForceFactor = position.y / data.descendingDistance;
+    position += data.windForce * windForceFactor * 10;
+
+    position += data.altitude;
+
+    float4x4 objectToWorldMatrix = float4x4(
+        data.scale, 0, 0, position.x,
+        0, data.scale, 0, position.y,
+        0, 0, data.scale, position.z,
+        0, 0, 0, 1
+    );
+
+    float4x4 rotationMatrix = GetRotationMatrix(data.rotationSpeed);
+
+    objectToWorldMatrix = mul(objectToWorldMatrix, rotationMatrix);
+
+    objectToWorldMatrixBuffer[id.x] = objectToWorldMatrix;
+}
