@@ -2,9 +2,10 @@
 # Preview
 ![](./Document/Preview.gif)
 # 安装
+## 方式 1
 **Step 1**  
 ![](./Document/Step01.png)  
-选择菜单Window→Package Manager  
+Unity Editor界面选择菜单Window→Package Manager  
 
 **Step 2**  
 ![](./Document/Step02.png)  
@@ -13,6 +14,23 @@
 **Step 3**  
 ![](./Document/Step03.png)  
 选择package.json
+
+## 方式2
+**Step 1**  
+![](./Document/Step04.png)  
+复制git仓库地址  
+
+**Step 2**  
+![](./Document/Step01.png)  
+Unity Editor界面选择菜单Window→Package Manager  
+
+**Step 3**  
+![](./Document/Step05.png)  
+选择Add package from git URL...  
+
+**Step 4**  
+![](./Document/Step06.png)  
+输入已复制的地址，点击Add
 
 # 使用
 ![](./Document/Params.png)  
