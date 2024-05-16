@@ -19,6 +19,7 @@ public class FallenLeaves : MonoBehaviour
     public ComputeShader computeShader;
 
     [Header("Count")]
+    [Min(1)]
     public int count = 500;
 
     [Header("Range")]
@@ -42,9 +43,13 @@ public class FallenLeaves : MonoBehaviour
 
     ComputeBuffer m_LeavesBuffer;
     ComputeBuffer m_MatrixBuffer;
+    ComputeBuffer m_argsBuffer;
+
+    uint[] args = new uint[] { 0, 0, 0, 0, 0 };
 
     int m_KernelIndex;
 
+    int m_CachedCount;
     void Start()
     {
         Init();
@@ -53,12 +58,16 @@ public class FallenLeaves : MonoBehaviour
     void Init()
     {
         m_KernelIndex = computeShader.FindKernel("Fallen");
+
+        m_argsBuffer = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
+
+        m_CachedCount = 1;
     }
     void Update()
     {
         DispatchKernel();
 
-        Graphics.DrawMeshInstancedProcedural(mesh, 0, material, new Bounds(Vector3.zero, 10000 * Vector3.one), count);
+        Graphics.DrawMeshInstancedIndirect(mesh, 0, material, new Bounds(Vector3.zero, 10000 * Vector3.one), m_argsBuffer, 0);
     }
     void OnValidate()
     {
@@ -66,6 +75,8 @@ public class FallenLeaves : MonoBehaviour
     }
     void OnDestroy()
     {
+        if (m_argsBuffer != null)
+            m_argsBuffer.Dispose();
         if (m_LeavesBuffer != null)
             m_LeavesBuffer.Dispose();
         if (m_MatrixBuffer != null)
@@ -73,6 +84,27 @@ public class FallenLeaves : MonoBehaviour
     }
     void UpdateBuffer()
     {
+        UpdateArgsBuffer();
+
+        UpdateDataBuffer();
+    }
+    void UpdateArgsBuffer()
+    {
+        if (m_argsBuffer != null)
+        {
+            if (mesh != null)
+            {
+                args[0] = mesh.GetIndexCount(0);
+                args[1] = (uint)count;
+                m_argsBuffer.SetData(args);
+            }
+        }
+    }
+    void UpdateDataBuffer()
+    {
+        if (count <= 0 || m_CachedCount <= 0) return;
+        m_CachedCount = count;
+
         if (m_LeavesBuffer != null)
             m_LeavesBuffer.Dispose();
         m_LeavesBuffer = new ComputeBuffer(count, sizeof(float) * 3 * 2 + sizeof(float) * 2 * 1 + sizeof(float) * 1 * 4);
@@ -110,6 +142,7 @@ public class FallenLeaves : MonoBehaviour
         if (m_MatrixBuffer != null)
             m_MatrixBuffer.Dispose();
         m_MatrixBuffer = new ComputeBuffer(count, sizeof(float) * 4 * 4);
+
         computeShader.SetBuffer(m_KernelIndex, "objectToWorldMatrixBuffer", m_MatrixBuffer);
 
         material.SetBuffer("objectToWorldMatrixBuffer", m_MatrixBuffer);
