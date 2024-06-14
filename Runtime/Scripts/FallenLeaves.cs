@@ -50,7 +50,7 @@ public class FallenLeaves : MonoBehaviour
     int m_KernelIndex;
 
     int m_CachedCount;
-    void Start()
+    void OnEnable()
     {
         Init();
         UpdateBuffer();
